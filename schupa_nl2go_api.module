@@ -1,0 +1,62 @@
+<?php
+/**
+ * @file
+ * Code for the schupa_nl2go_api.
+ */
+
+require_once 'src/Newsletter2GoApi.php';
+
+/*
+ * Implements hook_form_alter()
+ */
+function schupa_nl2go_api_form_alter(&$form, &$form_state, $form_id) {
+  $newsletter_forms = [
+      'newsletter_entityform_edit_form',
+      'register_entityform_edit_form'
+  ];
+
+  if (in_array($form_id, $newsletter_forms)) {
+    $form['#submit'][] = '_schupa_nl2go_api_submit';
+    $form['actions']['submit']['#submit'][] = '_schupa_nl2go_api_submit';
+  }
+}
+
+/*
+ * Implements custom submit function _schupa_nl2go_api_submit()
+ */
+function _schupa_nl2go_api_submit($form, &$form_state) {
+  $params = array();
+
+  $entity = $form_state['entityform'];
+  /** @var \EntityDrupalWrapper $wrapper */
+  $wrapper = $entity->wrapper();
+
+  $params['list_id'] = 'YOUR-LIST-ID';
+  $params['email'] = $wrapper->field_email->value();
+
+  if (isset($wrapper->field_form_name)) {
+    $params['first_name'] = $wrapper->field_form_name->value();
+  }
+  if (isset($wrapper->field_form_telephone)) {
+    $params['phone'] = $wrapper->field_form_telephone->value();
+  }
+  if (isset($wrapper->field_form_salutation)) {
+    switch ($wrapper->field_form_salutation->value()) {
+      case 'Frau':
+        $params['gender'] = 'f';
+        break;
+      case 'Herr':
+        $params['gender'] = 'm';
+    }
+  }
+
+  $authKey = 'YOUR-AUTH-KEY';
+  $userEmail = 'E-MAIL';
+  $userPassword = 'PASSWORD';
+
+  try {
+    $api = new Newsletter2GoApi($authKey, $userEmail, $userPassword);
+    $api->addRecipientToList($params);
+  } catch (Exception $e) {
+  }
+}

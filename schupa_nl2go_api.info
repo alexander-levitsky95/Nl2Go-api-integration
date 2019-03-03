@@ -1,0 +1,5 @@
+name = schupa newsletter2go
+description = Integration with the newsletter2go service.
+core = 7.x
+package = Custom
+version = 7.x-1.0
